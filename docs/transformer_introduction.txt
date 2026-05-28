@@ -1,0 +1,38 @@
+Transformer架构介绍
+
+Transformer是Google于2017年在论文"Attention is All You Need"中提出的深度学习架构。
+
+核心组成部分
+1. 多头自注意力机制(Multi-Head Attention)
+2. 位置编码(Positional Encoding)
+3. 前馈神经网络(Feed-Forward Neural Network)
+4. 残差连接(Residual Connection)
+5. 层归一化(Layer Normalization)
+
+编码器结构
+- N个编码器层堆叠
+- 每个编码器包含多头自注意力和前馈网络
+
+解码器结构
+- N个解码器层堆叠
+- 每个解码器包含：掩码多头自注意力、编码器-解码器注意力、前馈网络
+
+多头自注意力机制
+- 将输入向量通过不同的线性变换生成多个注意力头
+- 每个注意力头计算不同的注意力权重
+- 最后将所有注意力头的输出拼接并线性变换
+
+位置编码
+- 由于Transformer没有递归结构，需要显式添加位置信息
+- 使用正弦和余弦函数生成位置编码向量
+
+Transformer的优势
+- 并行计算能力强
+- 长距离依赖建模能力好
+- 模型结构清晰，易于扩展
+
+应用领域
+- 机器翻译：Google Translate
+- 文本生成：GPT系列
+- 语音识别：Whisper
+- 图像处理：Vision Transformer
