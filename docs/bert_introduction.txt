@@ -1,0 +1,28 @@
+BERT模型介绍
+
+BERT(Bidirectional Encoder Representations from Transformers)是Google于2018年提出的预训练语言模型。
+
+核心创新
+1. 双向预训练：能够同时考虑左右上下文
+2. Masked Language Model(MLM)：随机掩盖部分token并预测
+3. Next Sentence Prediction(NSP)：预测两个句子是否连续
+
+模型结构
+- Transformer编码器堆叠
+- 多头自注意力机制
+- 位置编码
+
+BERT变体
+- BERT-base：12层Transformer，768维隐藏层，12个注意力头
+- BERT-large：24层Transformer，1024维隐藏层，16个注意力头
+- ALBERT：参数高效版本
+- RoBERTa：优化训练策略的版本
+
+应用场景
+- 问答系统：SQuAD数据集
+- 命名实体识别：CoNLL-2003
+- 情感分析：IMDB、SST
+- 文本分类：MNLI、QNLI
+
+BERT的影响
+BERT开创了预训练+微调的范式，极大推动了NLP领域的发展，成为后续众多模型的基础。
