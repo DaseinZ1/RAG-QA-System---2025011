@@ -8,8 +8,20 @@ class KnowledgeBase:
     def __init__(self, persist_directory="./chroma_db", embedding_model="nomic-embed-text"):
         self.persist_directory = persist_directory
         self.embedding_model = embedding_model
-        self.embeddings = OllamaEmbeddings(model=self.embedding_model)
+        self.embeddings = None
         self.vector_store = None
+    
+    def _init_embeddings(self):
+        if self.embeddings is None:
+            try:
+                self.embeddings = OllamaEmbeddings(model=self.embedding_model)
+                # Test the embedding
+                test_embedding = self.embeddings.embed_query("test")
+                print(f"Embedding initialized successfully, dimension: {len(test_embedding)}")
+                return True
+            except Exception as e:
+                print(f"Failed to initialize embeddings: {e}")
+                return False
     
     def load_documents(self, folder_path):
         documents = []
@@ -55,6 +67,9 @@ class KnowledgeBase:
         return splits
     
     def build_vector_store(self, documents):
+        if not self._init_embeddings():
+            return False
+        
         splits = self.split_documents(documents)
         
         self.vector_store = Chroma.from_documents(
@@ -65,8 +80,12 @@ class KnowledgeBase:
         
         self.vector_store.persist()
         print(f"向量库构建完成，共 {len(splits)} 个文本块")
+        return True
     
     def load_vector_store(self):
+        if not self._init_embeddings():
+            return False
+            
         if os.path.exists(self.persist_directory):
             try:
                 self.vector_store = Chroma(

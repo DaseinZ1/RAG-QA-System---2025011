@@ -1,7 +1,7 @@
 from langchain_ollama import ChatOllama
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 class RAGChain:
     def __init__(self, retriever, model_name="deepseek-r1:7b"):
@@ -9,21 +9,24 @@ class RAGChain:
         self.retriever = retriever
         self.llm = None
         self.chain = None
-        self.memory = None
         self._init_chain()
     
     def _init_chain(self):
-        self.llm = ChatOllama(
-            model=self.model_name,
-            temperature=0.1,
-            num_ctx=8192
-        )
-        
-        self.memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True,
-            output_key='answer'
-        )
+        try:
+            self.llm = ChatOllama(
+                model=self.model_name,
+                temperature=0.1,
+                num_ctx=8192
+            )
+            
+            # Test the LLM connection
+            test_response = self.llm.invoke("Hello")
+            print(f"LLM initialized successfully: {test_response.content[:30]}...")
+            
+        except Exception as e:
+            print(f"Failed to initialize LLM: {e}")
+            self.llm = None
+            return
         
         system_prompt = """
         You are a question-answering assistant based on a knowledge base. Please answer the user's questions according to the provided reference documents.
@@ -46,20 +49,26 @@ class RAGChain:
             template=system_prompt
         )
         
-        self.chain = ConversationalRetrievalChain.from_llm(
-            llm=self.llm,
-            retriever=self.retriever,
-            memory=self.memory,
-            combine_docs_chain_kwargs={"prompt": prompt},
-            return_source_documents=True,
-            verbose=False
+        def format_docs(docs):
+            return "\n\n".join([d.page_content for d in docs])
+        
+        self.chain = (
+            {"context": self.retriever | format_docs, "question": RunnablePassthrough()}
+            | prompt
+            | self.llm
+            | StrOutputParser()
         )
     
     def ask(self, question):
+        if self.llm is None:
+            return "LLM模型未初始化，请检查Ollama服务是否正常运行", []
+        
+        if self.chain is None:
+            return "问答链未初始化", []
+        
         try:
-            result = self.chain({"question": question})
-            answer = result.get("answer", "")
-            sources = result.get("source_documents", [])
+            answer = self.chain.invoke(question)
+            sources = self.retriever.invoke(question)
             
             if "未找到相关答案" not in answer and not answer.strip():
                 answer = "文档中未找到相关答案"
@@ -67,8 +76,7 @@ class RAGChain:
             return answer, sources
         except Exception as e:
             print(f"问答失败: {e}")
-            return "问答过程中发生错误", []
+            return f"问答过程中发生错误: {str(e)}", []
     
     def clear_memory(self):
-        if self.memory:
-            self.memory.clear()
+        pass

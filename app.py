@@ -14,7 +14,7 @@ st.set_page_config(
 
 def init_session_state():
     if 'kb' not in st.session_state:
-        st.session_state.kb = KnowledgeBase(persist_directory="./chroma_db")
+        st.session_state.kb = KnowledgeBase(persist_directory="./chroma_db", embedding_model="nomic-embed-text")
     
     if 'rag_chain' not in st.session_state:
         st.session_state.rag_chain = None
@@ -47,7 +47,7 @@ def build_knowledge_base(uploaded_files):
         st.session_state.document_count = st.session_state.kb.get_document_count()
         
         retriever = st.session_state.kb.vector_store.as_retriever(search_kwargs={"k": 3})
-        st.session_state.rag_chain = RAGChain(retriever)
+        st.session_state.rag_chain = RAGChain(retriever, model_name="qwen2:0.5b")
         
         for f in os.listdir(temp_dir):
             os.remove(os.path.join(temp_dir, f))
